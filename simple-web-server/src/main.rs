@@ -1,5 +1,6 @@
 use std::net::{TcpListener, TcpStream};
 use std::io::prelude::*;
+use std::thread;
 
 fn main() {
 
@@ -12,7 +13,9 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
-                handle_connection(stream);
+                thread::spawn(|| {
+                    handle_connection(stream);
+                });
                 println!("Good connection!");
             }
             Err(e) => { 
