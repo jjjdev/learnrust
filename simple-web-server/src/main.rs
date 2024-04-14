@@ -64,8 +64,10 @@ fn build_response(request: String) -> String {
     }
     
     // if the first 5 characters are "/echo", return the rest of the string
-    if &req_path[..5] == "/echo" {
+    //if &req_path[..5] == "/echo" {
+    if req_path.starts_with("/echo"){
         let echo = &req_path[6..];
+        println!("Echoing {}" , echo);
         return build_body(&echo.to_string());
     };
 
@@ -73,11 +75,9 @@ fn build_response(request: String) -> String {
     return "HTTP/1.1 404 Not Found\r\n\r\n".to_string()
 }
 
-fn build_body(s: &String) -> String {
+fn build_body(payload: &String) -> String {
     
-    return String::from(format!("HTTP/1.1 200 OK\r\n\
-        Content-Type: text/plain\r\n
-        Content-Length: 3\r\n\r\n
-        {s}"))
+    let content_length = payload.len();
+    return format!("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {content_length}\r\n\r\n{payload}\r\n")
 
 }
