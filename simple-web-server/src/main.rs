@@ -47,14 +47,18 @@ fn build_response(request: String) -> String {
         println!("No request");
         return "HTTP/1.1 404 Not Found\r\n\r\n".to_string();
     }
-        
-    let req_target: Vec<&str> = lines[0].split_whitespace().collect();
-    let req_path = req_target[1];
+
+    // Break down the request into its components
+    // Todo: Build and populate a Request struct    
+    let req_target_line: Vec<&str> = lines[0].split_whitespace().collect();
+    let req_path = req_target_line[1];  
+    let _req_host_line: Vec<&str> = lines[1].split_whitespace().collect();
+    let req_user_agent_line: Vec<&str> = lines[2].split_whitespace().collect();
 
     println!("Request target: {}", req_path);
     
     // Empty request, return 404
-    if req_target.len() < 1 {
+    if req_target_line.len() < 1 {
         return "HTTP/1.1 404 Not Found\r\n\r\n".to_string();
     }
     
@@ -69,7 +73,12 @@ fn build_response(request: String) -> String {
         let echo = &req_path[6..];
         println!("Echoing {}" , echo);
         return build_body(&echo.to_string());
-    };
+    }
+    else if req_path.starts_with("/user-agent") {
+        let req_user_agent = req_user_agent_line[1];
+        println!("Returning user-agent: {}" , req_user_agent);
+        return build_body(&req_user_agent.to_string());
+    }
 
     println!("Catchall 404");
     return "HTTP/1.1 404 Not Found\r\n\r\n".to_string()
