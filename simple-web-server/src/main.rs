@@ -1,9 +1,8 @@
 use std::net::{TcpListener, TcpStream};
-use std::io::prelude::*;
+use std::io::*;
 use std::thread;
-use std::fs;
+use std::fs::{self, File};
 use std::env;
-
 
 fn main() {
 
@@ -31,7 +30,7 @@ fn main() {
 fn handle_connection(mut stream: TcpStream) {
 
     // -------- Handle request -------------
-    let mut buffer = [0; 512];
+    let mut buffer = [0; 1024];
     stream.read(&mut buffer).unwrap();
 
     let request = String::from_utf8_lossy(&buffer[..]);
@@ -57,7 +56,7 @@ fn build_response(request: String) -> String {
     // Break down the request into its components
     // Todo: Build and populate a Request struct   
     let req_target_line: Vec<&str> = lines[0].split_whitespace().collect();
-    let _req_method = req_target_line[0];
+    let req_method = req_target_line[0];
     let req_path = req_target_line[1];  
     let _req_host_line: Vec<&str> = lines[1].split_whitespace().collect();
     let req_user_agent_line: Vec<&str> = lines[2].split_whitespace().collect();
@@ -72,6 +71,29 @@ fn build_response(request: String) -> String {
     if req_path == "/" { 
         return "HTTP/1.1 200 OK\r\n\r\n".to_string();
         //return build_body();
+    }
+
+    if req_method == "POST" {
+        let filename = &req_path[7..];
+        let args: Vec<String> = env::args().collect();
+        let filename = format!("{}{}", args[2].to_string(), filename);
+        //let content = lines.last().unwrap();
+        let content = lines[lines.len()-1];
+        let content = &content[0..].to_string();
+        let content = content.trim_end_matches(char::from(0));
+
+        println!("Uploading File: {}", filename);
+        println!("Content: {}", content);
+
+        //let mut file = fs::File::create(filename).unwrap();
+        //file.write_all(content.as_bytes()).unwrap();
+
+        let file = fs::write(filename, content.as_bytes());
+
+        match file {
+            Ok(_fc) => return "HTTP/1.1 201 OK\r\n\r\n".to_string(),
+            Err(..) => return "HTTP/1.1 404 Not Found\r\n\r\n".to_string()
+        }
     }
     
     // if the first 5 characters are "/echo", return the rest of the string
